@@ -205,12 +205,12 @@ export const MOCK_USERS = [
 ];
 
 export const IMPACT_STATS = {
-  totalReports: 18472,
-  resolved: 11284,
-  citiesCovered: 142,
-  avgResolutionDays: 34,
-  volunteers: 8300,
-  upvotesCast: 284000,
+  totalReports: 0,
+  resolved: 0,
+  citiesCovered: 0,
+  avgResolutionDays: 0,
+  volunteers: 0,
+  upvotesCast: 0,
 };
 
 export const MONTHLY_DATA = [

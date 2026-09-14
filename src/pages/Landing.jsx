@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, MapPin, Shield, TrendingUp, Users, CheckCircle, AlertTriangle, Zap, ChevronRight, Star, Globe } from 'lucide-react';
-import { IMPACT_STATS, MOCK_REPORTS, CATEGORIES } from '../data/mockData';
+import { MOCK_REPORTS, CATEGORIES } from '../data/mockData';
+import { usePlatformMetrics } from '../hooks/usePlatformMetrics';
 import { StatusPill, SeverityPill } from '../components/common/StatusPill';
 import './Landing.css';
 
@@ -10,6 +11,10 @@ function useCounter(target, duration = 2000, start = false) {
   const [count, setCount] = useState(0);
   useEffect(() => {
     if (!start) return;
+    if (target === 0) {
+      setCount(0);
+      return;
+    }
     let startTime = null;
     const step = (timestamp) => {
       if (!startTime) startTime = timestamp;
@@ -26,7 +31,8 @@ function useCounter(target, duration = 2000, start = false) {
 function StatCard({ value, label, suffix = '', icon: Icon, color, delay }) {
   const [visible, setVisible] = useState(false);
   const ref = useRef();
-  const count = useCounter(value, 2200, visible);
+  const numericValue = typeof value === 'number' ? value : null;
+  const count = useCounter(numericValue ?? 0, 2200, visible);
 
   useEffect(() => {
     const observer = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.3 });
@@ -34,13 +40,17 @@ function StatCard({ value, label, suffix = '', icon: Icon, color, delay }) {
     return () => observer.disconnect();
   }, []);
 
+  const displayValue = numericValue !== null
+    ? (numericValue === 0 ? '0' : `${count.toLocaleString()}${suffix}`)
+    : (value ?? '—');
+
   return (
     <div className="stat-card glass-card animate-fadeInUp" style={{ animationDelay: `${delay}s` }} ref={ref}>
       <div className="stat-card__icon" style={{ background: `${color}20`, color }}>
         <Icon size={22} />
       </div>
       <div className="stat-card__number" style={{ color }}>
-        {count.toLocaleString()}{suffix}
+        {displayValue}
       </div>
       <div className="stat-card__label">{label}</div>
     </div>
@@ -85,6 +95,7 @@ const HOW_IT_WORKS = [
 
 export default function Landing() {
   const navigate = useNavigate();
+  const metrics = usePlatformMetrics();
   const [heroVisible, setHeroVisible] = useState(false);
 
   useEffect(() => {
@@ -176,14 +187,25 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ─── STATS ─── */}
-      <section className="section landing-stats" aria-label="Impact statistics">
+      {/* ─── LIVE PLATFORM METRICS ─── */}
+      <section className="section landing-stats" aria-label="Live Platform Metrics">
         <div className="container">
+          <div className="text-center" style={{ marginBottom: 'var(--space-8)' }}>
+            <div className="section-label" style={{ margin: '0 auto var(--space-3)' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', boxShadow: '0 0 8px var(--accent)' }} />
+              Live Platform Metrics
+            </div>
+            <h2 style={{ fontSize: 'var(--text-3xl)' }}>Real-Time <span className="gradient-text-primary">System Telemetry</span></h2>
+            <p style={{ maxWidth: 520, margin: 'var(--space-2) auto 0', color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>
+              Live infrastructure health indicators streaming directly from the network.
+            </p>
+          </div>
+
           <div className="landing-stats__grid">
-            <StatCard value={IMPACT_STATS.totalReports} label="Issues Reported"    suffix=""    icon={AlertTriangle} color="#FF6B6B" delay={0}   />
-            <StatCard value={IMPACT_STATS.resolved}     label="Issues Resolved"    suffix=""    icon={CheckCircle}   color="#00D4AA" delay={0.1} />
-            <StatCard value={IMPACT_STATS.citiesCovered} label="Cities Covered"   suffix="+"   icon={Globe}         color="#6C63FF" delay={0.2} />
-            <StatCard value={IMPACT_STATS.volunteers}   label="Active Advocates"  suffix="+"   icon={Users}         color="#FFB84C" delay={0.3} />
+            <StatCard value={metrics.totalReports} label="Issues Reported"    suffix=""    icon={AlertTriangle} color="#FF6B6B" delay={0}   />
+            <StatCard value={metrics.resolved}     label="Issues Resolved"    suffix=""    icon={CheckCircle}   color="#00D4AA" delay={0.1} />
+            <StatCard value={metrics.citiesCovered} label="Cities Covered"   suffix=""    icon={Globe}         color="#6C63FF" delay={0.2} />
+            <StatCard value={metrics.activeAdvocates} label="Active Advocates"  suffix=""    icon={Users}         color="#FFB84C" delay={0.3} />
           </div>
         </div>
       </section>

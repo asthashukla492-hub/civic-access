@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { StatusPill, SeverityPill } from '../components/common/StatusPill';
-import { IMPACT_STATS } from '../data/mockData';
 import './Admin.css';
 
 const STATUS_FLOW = ['reported', 'under_review', 'in_progress', 'resolved', 'closed'];

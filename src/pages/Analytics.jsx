@@ -4,7 +4,8 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { BarChart3, TrendingUp, CheckCircle, Globe, Clock, Users, AlertTriangle, Zap } from 'lucide-react';
-import { IMPACT_STATS, MONTHLY_DATA, CATEGORY_DATA, TOP_CITIES } from '../data/mockData';
+import { MONTHLY_DATA, CATEGORY_DATA, TOP_CITIES } from '../data/mockData';
+import { usePlatformMetrics } from '../hooks/usePlatformMetrics';
 import './Analytics.css';
 
 const DONUT_DATA = [
@@ -29,27 +30,29 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-function KPICard({ icon: Icon, label, value, suffix = '', color, change, delay }) {
+function KPICard({ icon: Icon, label, value, suffix = '', color, delay }) {
+  const displayValue = typeof value === 'number'
+    ? (value === 0 && suffix !== '%' ? '0' : `${value.toLocaleString()}${suffix}`)
+    : (value ?? '—');
+
   return (
     <div className="kpi-card glass-card animate-fadeInUp" style={{ animationDelay: `${delay}s` }}>
       <div className="kpi-card__icon" style={{ background: `${color}18`, color }}>
         <Icon size={22} />
       </div>
       <div className="kpi-card__value" style={{ color }}>
-        {typeof value === 'number' ? value.toLocaleString() : value}{suffix}
+        {displayValue}
       </div>
       <div className="kpi-card__label">{label}</div>
-      {change && (
-        <div className="kpi-card__change" style={{ color: change > 0 ? 'var(--accent)' : 'var(--danger)' }}>
-          {change > 0 ? '↑' : '↓'} {Math.abs(change)}% vs last month
-        </div>
-      )}
     </div>
   );
 }
 
 export default function Analytics() {
-  const resolveRate = Math.round((IMPACT_STATS.resolved / IMPACT_STATS.totalReports) * 100);
+  const metrics = usePlatformMetrics();
+  const resolveRate = metrics.totalReports > 0
+    ? Math.round((metrics.resolved / metrics.totalReports) * 100)
+    : 0;
 
   return (
     <div className="analytics-page animate-pageEnter">
@@ -74,12 +77,12 @@ export default function Analytics() {
 
         {/* KPI Row */}
         <div className="kpi-grid">
-          <KPICard icon={AlertTriangle} label="Total Reports"    value={IMPACT_STATS.totalReports} color="#FF6B6B" change={18}  delay={0}   />
-          <KPICard icon={CheckCircle}   label="Resolved"         value={IMPACT_STATS.resolved}     color="#00D4AA" change={24}  delay={0.1} />
-          <KPICard icon={Globe}         label="Cities Active"    value={IMPACT_STATS.citiesCovered} suffix="+" color="#6C63FF" change={8}  delay={0.2} />
-          <KPICard icon={Clock}         label="Avg Resolution"   value={IMPACT_STATS.avgResolutionDays} suffix=" days" color="#FFB84C" change={-12} delay={0.3} />
-          <KPICard icon={Users}         label="Advocates"        value={IMPACT_STATS.volunteers}   suffix="+" color="#4ECDC4" change={31}  delay={0.4} />
-          <KPICard icon={Zap}           label="Resolution Rate"  value={resolveRate}               suffix="%" color="#A78BFA" change={6}   delay={0.5} />
+          <KPICard icon={AlertTriangle} label="Total Reports"    value={metrics.totalReports} color="#FF6B6B" delay={0}   />
+          <KPICard icon={CheckCircle}   label="Resolved"         value={metrics.resolved}     color="#00D4AA" delay={0.1} />
+          <KPICard icon={Globe}         label="Cities Active"    value={metrics.citiesCovered} color="#6C63FF" delay={0.2} />
+          <KPICard icon={Clock}         label="Avg Resolution"   value={metrics.avgResolutionDays > 0 ? metrics.avgResolutionDays : 0} suffix={metrics.avgResolutionDays > 0 ? " days" : ""} color="#FFB84C" delay={0.3} />
+          <KPICard icon={Users}         label="Advocates"        value={metrics.activeAdvocates} color="#4ECDC4" delay={0.4} />
+          <KPICard icon={Zap}           label="Resolution Rate"  value={resolveRate} suffix="%" color="#A78BFA" delay={0.5} />
         </div>
 
         {/* Charts Row 1 */}
